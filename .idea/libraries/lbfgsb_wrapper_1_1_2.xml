@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="lbfgsb_wrapper-1.1.2">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/lib/lbfgsb_wrapper-1.1.2-src/dist/lbfgsb_wrapper-1.1.2.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

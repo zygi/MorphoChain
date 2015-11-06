@@ -1,7 +1,5 @@
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.*;
-
 /**
  * Created by ghostof2007 on 5/8/14.
  * Different evaluation routines

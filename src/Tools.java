@@ -1,5 +1,6 @@
+import com.google.common.collect.Sets;
+
 import java.io.IOException;
-import java.util.*;
 import java.util.List;
 
 /**
@@ -180,20 +181,13 @@ public class Tools {
         MorphoChain.weights.set(MorphoChain.feature2Index.get(feature), weight);
     }
 
-    static HashSet<String> clone(HashSet<String> map) {
-        HashSet<String> newMap = new HashSet<String>();
-        for(String key : map)
-            newMap.add(key);
-        return newMap;
-    }
-
-
     static HashMap<String, Map<String, Double>> computeAffixCorrelation(LinkedHashSet<String> affixes, char type) throws IOException {
         System.out.print("Computing affix correlation - " + type + " ...");
         String [] affixArray = new String[affixes.size()];
         affixArray = affixes.toArray(affixArray);
         double[][] correlationMatrix = new double[affixArray.length][affixArray.length];
-        HashMap<String, HashSet<String>> affix2Word = new HashMap<String, HashSet<String>>();
+
+        HashMap<String, Set<String>> affix2Word = new HashMap<String, Set<String>>();
         for(String affix : affixArray) {
             affix2Word.put(affix, new HashSet<String>());
             for(String word : MorphoChain.word2Cnt.keySet())
@@ -210,8 +204,9 @@ public class Tools {
             HashMap<String, Double> neighbor2Score = new HashMap<String, Double>();
             for (int j = 0; j < affixArray.length; j++)
                 if (i != j) {
-                    HashSet<String> tmp = Tools.clone(affix2Word.get(affixArray[i]));
-                    tmp.retainAll(affix2Word.get(affixArray[j]));
+                    Sets.SetView<String> tmp = Sets.intersection(affix2Word.get(affixArray[i]), affix2Word.get(affixArray[j]));
+//                    HashSet<String> tmp = new HashSet<>(affix2Word.get(affixArray[i]));
+//                    tmp.retainAll(affix2Word.get(affixArray[j]));
                     correlationMatrix[i][j] = ((double) tmp.size()) / affix2Word.get(affixArray[i]).size();
                     neighbor2Score.put(affixArray[j], correlationMatrix[i][j]);
                     if(correlationMatrix[i][j] > bestCorrelation) {
