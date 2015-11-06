@@ -1,5 +1,10 @@
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
 /**
  * Created by ghostof2007 on 5/8/14.
  * Different evaluation routines
