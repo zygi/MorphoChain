@@ -1,9 +1,6 @@
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by ghostof2007 on 5/8/14.
@@ -27,7 +24,7 @@ public class Evaluate {
         return segPoints;
     }
 
-    static double [] evaluateSegmentationPoints(String predSeg, ArrayList<String> goldSegs) {
+    static double [] evaluateSegmentationPoints(String predSeg, List<String> goldSegs) {
         //find the best match over different points
         double bestCorrect = 0., bestTotal =0., minBestTotal = 100.;
         HashSet<Integer> predPoints = getSegPoints(predSeg);
@@ -61,7 +58,7 @@ public class Evaluate {
         incorrectSegmentations.clear();
         correctSegmentations.clear();
 
-        for(Pair<String, ArrayList<String>> entry : MorphoChain.goldSegs) {
+        for(Pair<String, List<String>> entry : MorphoChain.goldSegs) {
             //segment without explicit chain
             String predSeg = MorphoChain.segment(entry.getKey());
 

@@ -4,10 +4,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by ghostof2007 on 5/6/14.
@@ -43,8 +40,10 @@ public class MorphoChain {
 
 
     //data files (overridden by params!)
-    static String wordVectorFile;
-    static String wordListFile;
+    static String wordVectorFileMain;
+    static String wordVectorFileSide;
+    static String wordListFileMain;
+    static String wordListFileSide;
     static String testListFile;
     static String goldSegFile;
 
@@ -64,12 +63,17 @@ public class MorphoChain {
     static String ALPHABET="qwertyuiopasdfghjklzxcvbnm";
 
 
-    static HashMap<String, ArrayList<Double>> wordVec = new HashMap<String, ArrayList<Double>>();
-    static HashMap<String, Integer> word2Cnt = new HashMap<String, Integer>();
-    static ArrayList<Pair<String, ArrayList<String>>> goldSegs = new ArrayList<Pair<String, ArrayList<String>>>();
-    static HashMap<String, ArrayList<String>> goldSegmentations = new HashMap<String, ArrayList<String>>();
+    static HashMap<String, List<Double>> wordVecMain = new HashMap<String, List<Double>>();
+    static HashMap<String, List<Double>> wordVecSide = new HashMap<String, List<Double>>();
+    static HashMap<String, Integer> word2CntMain = new HashMap<String, Integer>();
+    static HashMap<String, Integer> word2CntSide= new HashMap<String, Integer>();
+
+    static ArrayList<Pair<String, List<String>>> goldSegs = new ArrayList<Pair<String, List<String>>>();
+    static HashMap<String, List<String>> goldSegmentations = new HashMap<String, List<String>>();
+
     static HashMap<String, Integer> feature2Index = new HashMap<String, Integer>();
     static ArrayList<String> index2Feature = new ArrayList<String>();
+
     static ArrayList<Double> weights = new ArrayList<Double>();
     static HashMap<String, Double> word2MaxDot  = new HashMap<String, Double>();
 
@@ -93,8 +97,8 @@ public class MorphoChain {
 
     Function func;
 
-    void readWordVectors() throws IOException, InterruptedException {
-        BufferedReader br = new BufferedReader(new FileReader(wordVectorFile));
+    void readWordVectors(String file, HashMap<String, List<Double>> target) throws IOException, InterruptedException {
+        BufferedReader br = new BufferedReader(new FileReader(file));
         try {
             StringBuilder sb;
             String line = br.readLine();
@@ -102,22 +106,22 @@ public class MorphoChain {
                 sb = new StringBuilder();
                 sb.append(line);
                 String[] parts = sb.toString().split(" ");
-                ArrayList<Double> vector = new ArrayList<Double>();
+                List<Double> vector = new ArrayList<Double>();
                 String word = parts[0];
                 for(int i=1;i<Math.min(VECTOR_SIZE + 1, parts.length);i++) {
                     vector.add(Double.parseDouble(parts[i]));
                 }
-                wordVec.put(word, vector);
+                target.put(word, vector);
                 line = br.readLine();
             }
         } finally {
             br.close();
         }
-        System.err.println("Read in "+Integer.toString(wordVec.size())+" vectors");
+        System.err.println("Read in "+Integer.toString(target.size())+" vectors");
     }
 
-    void readWordList() throws IOException, InterruptedException {
-        BufferedReader br = new BufferedReader(new FileReader(wordListFile));
+    void readWordList(String file, HashMap<String, Integer> target) throws IOException, InterruptedException {
+        BufferedReader br = new BufferedReader(new FileReader(file));
         try {
             StringBuilder sb;
             String line = br.readLine();
@@ -128,13 +132,13 @@ public class MorphoChain {
                 String[] parts = sb.toString().split(" ");
                 String word = parts[0];
                 if(word.length()>=MIN_SEG_LENGTH)
-                    word2Cnt.put(word, Integer.parseInt(parts[1]));
+                    target.put(word, Integer.parseInt(parts[1]));
                 line = br.readLine();
             }
         } finally {
             br.close();
         }
-        System.err.println("Read in "+Integer.toString(word2Cnt.size())+" words");
+        System.err.println("Read in "+Integer.toString(target.size())+" words");
     }
 
     void readGoldSegmentations() throws IOException, InterruptedException {
@@ -152,11 +156,11 @@ public class MorphoChain {
                 for(int i=1;i<parts.length; i++)
                     segmentations.add(parts[i]);
                 goldSegmentations.put(word, segmentations);
-                goldSegs.add(new MutablePair<String, ArrayList<String>>(word, segmentations));
+                goldSegs.add(new MutablePair<String, List<String>>(word, segmentations));
 
                 //inductive mode
                 if(INDUCTIVE)
-                    word2Cnt.put(word, MorphoChain.FREQ_THRESHOLD+1);
+                    word2CntMain.put(word, MorphoChain.FREQ_THRESHOLD+1);
 
 
                 line = br.readLine();
@@ -170,8 +174,10 @@ public class MorphoChain {
     MorphoChain() {}
 
     void initialize() throws IOException, InterruptedException {
-        readWordVectors();
-        readWordList();
+        readWordVectors(wordVectorFileMain, wordVecMain);
+        readWordVectors(wordVectorFileSide, wordVecSide);
+        readWordList(wordListFileMain, word2CntMain);
+        readWordList(wordListFileSide, word2CntSide);
         readGoldSegmentations();
 
         selectMostFrequentAffixes();
@@ -181,8 +187,8 @@ public class MorphoChain {
         int i = 0;
 
         System.err.println("Initializing features....");
-        for(String word : MorphoChain.word2Cnt.keySet()) {
-            if(MorphoChain.word2Cnt.get(word) < FREQ_THRESHOLD) continue;
+        for(String word : MorphoChain.word2CntMain.keySet()) {
+            if(MorphoChain.word2CntMain.get(word) < FREQ_THRESHOLD) continue;
 
             for(String neighbor : EM.getNeighbors(word)) {
                 for(Pair<String, Integer> parentAndType : getCandidates(neighbor)) {
@@ -233,8 +239,8 @@ public class MorphoChain {
         String affix = "";
         String inVocab = "";
 
-        if(word2Cnt.containsKey(parent) && word2Cnt.get(parent) > HEURISTIC_FREQ_THRESHOLD) {
-            Tools.addFeature(features, "_IV_", Math.log(word2Cnt.get(parent)));
+        if(word2CntMain.containsKey(parent) && word2CntMain.get(parent) > HEURISTIC_FREQ_THRESHOLD) {
+            Tools.addFeature(features, "_IV_", Math.log(word2CntMain.get(parent)));
         }
         else
             Tools.addFeature(features, "_OOV_", 1.);
@@ -251,7 +257,7 @@ public class MorphoChain {
             if(AFFIX_NEIGHBORS && suffixNeighbor.containsKey(affix)) {
                 int i = 0;
                 for(String neighbor : suffixNeighbor.get(affix).keySet()) {
-                    if (word2Cnt.containsKey(parent + neighbor)) {
+                    if (word2CntMain.containsKey(parent + neighbor)) {
                         Tools.addFeature(features, "COR_S_" + affix, 1.);
                         break;
                     }
@@ -281,7 +287,7 @@ public class MorphoChain {
             if(AFFIX_NEIGHBORS && suffixNeighbor.containsKey(affix)) {
                 int i = 0;
                 for(String neighbor : suffixNeighbor.get(affix).keySet()) {
-                    if (word2Cnt.containsKey(parent + neighbor)) {
+                    if (word2CntMain.containsKey(parent + neighbor)) {
                         Tools.addFeature(features, "COR_S_" + affix, 1.);
                         break;
                     }
@@ -311,7 +317,7 @@ public class MorphoChain {
             if(AFFIX_NEIGHBORS && suffixNeighbor.containsKey(affix)) {
                 int i = 0;
                 for(String neighbor : suffixNeighbor.get(affix).keySet()) {
-                    if (word2Cnt.containsKey(parent + neighbor)) {
+                    if (word2CntMain.containsKey(parent + neighbor)) {
                         Tools.addFeature(features, "COR_S_" + affix, 1.);
                         break;
                     }
@@ -342,7 +348,7 @@ public class MorphoChain {
             if(AFFIX_NEIGHBORS && suffixNeighbor.containsKey(affix)) {
                 int i = 0;
                 for(String neighbor : suffixNeighbor.get(affix).keySet()) {
-                    if (word2Cnt.containsKey(parent + neighbor)) {
+                    if (word2CntMain.containsKey(parent + neighbor)) {
                         Tools.addFeature(features, "COR_S_" + affix, 1.);
                         break;
                     }
@@ -374,7 +380,7 @@ public class MorphoChain {
             if(AFFIX_NEIGHBORS && prefixNeighbor.containsKey(affix)) {
                 int i = 0;
                 for(String neighbor : prefixNeighbor.get(affix).keySet()) {
-                    if (word2Cnt.containsKey(neighbor + parent)) {
+                    if (word2CntMain.containsKey(neighbor + parent)) {
                         Tools.addFeature(features, "COR_P_" + affix, 1.);
                         break;
                     }
@@ -433,14 +439,14 @@ public class MorphoChain {
     void selectMostFrequentAffixes() throws IOException {
         HashMap<String, Integer> suffixCnt = new HashMap<String, Integer>();
         HashMap<String, Integer> prefixCnt = new HashMap<String, Integer>();
-        for (String word : word2Cnt.keySet()) {
-            if(word2Cnt.get(word) < FREQ_THRESHOLD) continue;
+        for (String word : word2CntMain.keySet()) {
+            if(word2CntMain.get(word) < FREQ_THRESHOLD) continue;
             for (int i = 1; i < word.length(); i++) {
                 String left = word.substring(0, i);
                 String right = word.substring(i);
 
                 //suffix case
-                Integer cnt = word2Cnt.get(left);
+                Integer cnt = word2CntMain.get(left);
                 if (cnt != null && cnt > AFFIX_FREQ_THRESHOLD && right.length() <= MAX_AFFIX_LENGTH)
                     if (suffixCnt.containsKey(right))
                         suffixCnt.put(right, suffixCnt.get(right) + 1);
@@ -448,7 +454,7 @@ public class MorphoChain {
                         suffixCnt.put(right, 1);
 
                 //prefix case
-                cnt = word2Cnt.get(right);
+                cnt = word2CntMain.get(right);
                 if (cnt != null && cnt > AFFIX_FREQ_THRESHOLD && left.length() <= MAX_AFFIX_LENGTH)
                     if (prefixCnt.containsKey(left))
                         prefixCnt.put(left, prefixCnt.get(left) + 1);
@@ -490,7 +496,7 @@ public class MorphoChain {
         double dot_threshold = 0.0;
         if(type == MODIFY)
             dot_threshold = 0.5;
-        Integer wordCnt = word2Cnt.get(parent);
+        Integer wordCnt = word2CntMain.get(parent);
         if(wordCnt!= null && wordCnt > HEURISTIC_FREQ_THRESHOLD)
             if(2*parent.length() >= word.length())
                 if(Tools.dot(word, parent) > dot_threshold) //the dot takes care of the non-exist case by returning 0.
@@ -526,7 +532,7 @@ public class MorphoChain {
                         if(ALPHABET.charAt(q) == parent.charAt(n-1)) continue;
                         String newParent = parent.substring(0, n-1)+ALPHABET.charAt(q);
 
-                        if(word2Cnt.containsKey(newParent) && word2Cnt.get(newParent) > HEURISTIC_FREQ_THRESHOLD && Tools.dot(word, newParent) > 0.2)
+                        if(word2CntMain.containsKey(newParent) && word2CntMain.get(newParent) > HEURISTIC_FREQ_THRESHOLD && Tools.dot(word, newParent) > 0.2)
                             candidates.add(new MutablePair<String, Integer>(newParent, MODIFY));
 
                     }
@@ -536,7 +542,7 @@ public class MorphoChain {
                     for(int q=0;q<ALPHABET.length();q++) {
                         String newParent = parent+ALPHABET.charAt(q);
                         if(word.contains(newParent)) continue;
-                        if(word2Cnt.containsKey(newParent) && word2Cnt.get(newParent) > HEURISTIC_FREQ_THRESHOLD && Tools.dot(word, newParent) > 0)
+                        if(word2CntMain.containsKey(newParent) && word2CntMain.get(newParent) > HEURISTIC_FREQ_THRESHOLD && Tools.dot(word, newParent) > 0)
                             candidates.add(new MutablePair<String, Integer>(newParent, DELETE));
                     }
                 }

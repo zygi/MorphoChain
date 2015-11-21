@@ -28,13 +28,13 @@ public class Function implements DifferentiableFunction {
 
             int i = 0;
             //calculate values for EM_ON
-            for(String word : MorphoChain.word2Cnt.keySet()) {
-                if(MorphoChain.word2Cnt.get(word) < MorphoChain.FREQ_THRESHOLD) continue;
+            for(String word : MorphoChain.word2CntMain.keySet()) {
+                if(MorphoChain.word2CntMain.get(word) < MorphoChain.FREQ_THRESHOLD) continue;
                 if(Main.SOFT_EM)
                     EM.calculateProbsSoft(word);
                 else
                     EM.calculateProbs(word);
-                System.err.print("\r" + (i++) + "/" + MorphoChain.word2Cnt.size());
+                System.err.print("\r" + (i++) + "/" + MorphoChain.word2CntMain.size());
             }
             System.err.println();
         }
@@ -67,8 +67,8 @@ public class Function implements DifferentiableFunction {
 
         double sum = 0.;
         //TODO : parallelizable
-        for(String word : MorphoChain.word2Cnt.keySet()) {
-            if(MorphoChain.word2Cnt.get(word) < MorphoChain.FREQ_THRESHOLD) continue;
+        for(String word : MorphoChain.word2CntMain.keySet()) {
+            if(MorphoChain.word2CntMain.get(word) < MorphoChain.FREQ_THRESHOLD) continue;
             sum += (MorphoChain.logSumPartObjective(word, true) - MorphoChain.logSumPartObjective(word, false));
         }
 
@@ -101,8 +101,8 @@ public class Function implements DifferentiableFunction {
 
         HashMap<Integer, Double> featureGradient = new HashMap<Integer, Double>();
         //TODO : parallelizable
-        for(String word : MorphoChain.word2Cnt.keySet()) {
-            if(MorphoChain.word2Cnt.get(word) < MorphoChain.FREQ_THRESHOLD) continue;
+        for(String word : MorphoChain.word2CntMain.keySet()) {
+            if(MorphoChain.word2CntMain.get(word) < MorphoChain.FREQ_THRESHOLD) continue;
             HashMap<Integer, Double> tmpMapC = MorphoChain.gradObjective(word, true);
             HashMap<Integer, Double> tmpMapD = MorphoChain.gradObjective(word, false);
 

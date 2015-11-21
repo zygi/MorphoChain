@@ -38,8 +38,8 @@ public class Tools {
 
     static double dot(String a, String b) {
         double sum = 0.;
-        ArrayList<Double> vec1 = MorphoChain.wordVec.get(a);
-        ArrayList<Double> vec2 = MorphoChain.wordVec.get(b);
+        List<Double> vec1 = MorphoChain.wordVecMain.get(a);
+        List<Double> vec2 = MorphoChain.wordVecMain.get(b);
         if(vec1==null || vec2==null) return -0.5; //FIXME - make sure not using just plain DOT
         for(int i=0; i < vec1.size(); i++)
             sum += vec1.get(i) * vec2.get(i);
@@ -189,8 +189,8 @@ public class Tools {
 
         HashMap<String, Set<String>> affix2Word = new HashMap<String, Set<String>>();
         for(String affix : affixArray) {
-            affix2Word.put(affix, new HashSet<String>());
-            for(String word : MorphoChain.word2Cnt.keySet())
+            affix2Word.put(affix, new LinkedHashSet<String>());
+            for(String word : MorphoChain.word2CntMain.keySet())
                 if(type=='s' && word.endsWith(affix))
                     affix2Word.get(affix).add(word.substring(0,word.length()-affix.length()));
                 else if(type=='p' && word.startsWith(affix))

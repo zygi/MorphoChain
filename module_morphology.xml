@@ -24,6 +24,7 @@
     <path refid="library.jheatchart-0.6.classpath"/>
     <path refid="library.jcommon-1.0.22.classpath"/>
     <path refid="library.jfreechart-1.0.18.classpath"/>
+    <path refid="library.trove-3.0.3.classpath"/>
   </path>
   
   <path id="morphology.runtime.production.module.classpath">
@@ -35,6 +36,7 @@
     <path refid="library.jheatchart-0.6.classpath"/>
     <path refid="library.jcommon-1.0.22.classpath"/>
     <path refid="library.jfreechart-1.0.18.classpath"/>
+    <path refid="library.trove-3.0.3.classpath"/>
   </path>
   
   <path id="morphology.module.classpath">
@@ -47,6 +49,7 @@
     <path refid="library.jheatchart-0.6.classpath"/>
     <path refid="library.jcommon-1.0.22.classpath"/>
     <path refid="library.jfreechart-1.0.18.classpath"/>
+    <path refid="library.trove-3.0.3.classpath"/>
   </path>
   
   <path id="morphology.runtime.module.classpath">
@@ -59,6 +62,7 @@
     <path refid="library.jheatchart-0.6.classpath"/>
     <path refid="library.jcommon-1.0.22.classpath"/>
     <path refid="library.jfreechart-1.0.18.classpath"/>
+    <path refid="library.trove-3.0.3.classpath"/>
   </path>
   
   

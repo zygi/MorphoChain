@@ -47,8 +47,10 @@ public class Main {
             MorphoChain.AFFIX_FREQ_THRESHOLD=Integer.parseInt(prop.getProperty("AFFIX_FREQ_THRESHOLD"));
             MorphoChain.MIN_SEG_LENGTH=Integer.parseInt(prop.getProperty("MIN_SEG_LENGTH"));
             MorphoChain.TOP_AFFIX_SELECT=Integer.parseInt(prop.getProperty("TOP_AFFIX_SELECT"));
-            MorphoChain.wordVectorFile=prop.getProperty("wordVectorFile");
-            MorphoChain.wordListFile=prop.getProperty("wordListFile");
+            MorphoChain.wordVectorFileMain=prop.getProperty("wordVectorFileMain");
+            MorphoChain.wordVectorFileSide=prop.getProperty("wordVectorFileSide");
+            MorphoChain.wordListFileMain=prop.getProperty("wordListFileMain");
+            MorphoChain.wordListFileSide=prop.getProperty("wordListFileSide");
             if(PRODUCE_SEGMENTATIONS) MorphoChain.testListFile=prop.getProperty("testListFile");
             MorphoChain.goldSegFile=prop.getProperty("goldSegFile");
             if(prop.getProperty("alphabet") != null)
